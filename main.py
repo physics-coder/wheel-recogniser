@@ -3,8 +3,8 @@ import math
 import cv2
 import numpy as np
 import time
+# import threading
 pyautogui.PAUSE = 0
-
 class Point():
     def __init__(self, x, y=None, polar=False):
         if type(x) == Point:
@@ -57,25 +57,27 @@ class Vector(Point):
 
 def dist(a,b,c,d):
     return math.sqrt((a-c)**2+(b-d)**2)
+time.sleep(5)
 cap = cv2.VideoCapture(0)
 
 if (cap.isOpened() == False):
     print("Error opening video stream or file")
 
-start = 0
+
 dir = "None"
 while (cap.isOpened()):
     ret, img_orig = cap.read()
     if ret == True:
         image_hsv = cv2.cvtColor(img_orig, cv2.COLOR_BGR2HSV)
-        lower1 = np.array([170 * 179 / 360, 60 * 255 / 100, 45 * 255 / 100])
+        lower1 = np.array([150 * 179 / 360, 60 * 255 / 100, 25 * 255 / 100])
         upper1 = np.array([240 * 179 / 360, 117 * 255 / 100, 100 * 255 / 100])
         mask_tick = cv2.inRange(image_hsv, lower1, upper1)
         full_mask = mask_tick
         tick_img = cv2.bitwise_and(img_orig, img_orig, mask=full_mask)
-        cv2.imshow("mask", tick_img)
+        # cv2.imshow("mask", tick_img)
         tick_img = cv2.cvtColor(tick_img, cv2.COLOR_BGR2GRAY)
-        ret, th = cv2.threshold(tick_img, 50, 255, cv2.THRESH_BINARY)
+        ret, th = cv2.threshold(tick_img, 70, 255, cv2.THRESH_BINARY)
+        # cv2.imshow("thresh", th)
         contours, hierarchy = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         img= cv2.cvtColor(img_orig, cv2.COLOR_BGR2GRAY)
         circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, 2000, param1=100, param2=40, minRadius=200, maxRadius=0)
@@ -84,15 +86,16 @@ while (cap.isOpened()):
                 for n, cnt in enumerate(contours):
                     epsilon = 100 / 1000 * cv2.arcLength(cnt, True)
                     poly = cv2.approxPolyDP(cnt, epsilon, True)
-                    poly = cnt
                     flag = True
+                    print(len(poly))
+                    if len(poly) > 4:
+                        flag = False
                     for i in range(0, len(poly)):
                         for j in range(0, len(poly[i])):
                             if dist(circles[0][0][0], circles[0][0][1], poly[i][j][0], poly[i][j][1]) > circles[0][0][2]:
                                 flag = False
                     if flag:
                         cv2.drawContours(img_orig, [poly], -1, (128, 255, 128), 5)
-                        # wheel detectdddadddd
                     if flag:
                         for i in circles[0, :]:
                                 cv2.circle(img_orig, (i[0], i[1]), i[2], (0, 255, 0), 6)
@@ -104,22 +107,21 @@ while (cap.isOpened()):
                         y = int(M["m01"] / M["m00"])
                         cv2.circle(img_orig, (x, y), 7, (255, 255, 255), -1)
                         v2 = Vector(circles[0][0][0], circles[0][0][1], x, y)
-                        print(v1.cross_product(v2))
-                        if v1.cross_product(v2) > 30000:
+                        if v1.cross_product(v2) > 20000:
                             if dir == "a":
-                                if v1.cross_product(v2) < 40000:
+                                if v1.cross_product(v2) < 30000:
                                     pyautogui.keyUp("a")
-                                    time.sleep(0.1)
+                                    time.sleep(0.09)
                                     pyautogui.keyDown("a")
-                                elif v1.cross_product(v2) < 60000:
+                                elif v1.cross_product(v2) < 40000:
                                     pyautogui.keyUp("a")
-                                    time.sleep(0.08)
+                                    time.sleep(0.07)
                                     pyautogui.keyDown("a")
-                                elif v1.cross_product(v2) < 80000:
+                                elif v1.cross_product(v2) < 50000:
                                     pyautogui.keyUp("a")
                                     time.sleep(0.06)
                                     pyautogui.keyDown("a")
-                                elif v1.cross_product(v2) < 125000:
+                                elif v1.cross_product(v2) < 6000:
                                     pyautogui.keyUp("a")
                                     time.sleep(0.04)
                                     pyautogui.keyDown("a")
@@ -132,21 +134,21 @@ while (cap.isOpened()):
                                 pyautogui.keyDown("a")
                             dir = "a"
                         #
-                        elif v1.cross_product(v2) < -30000:
+                        elif v1.cross_product(v2) < -20000:
                             if dir == "d":
-                                if v1.cross_product(v2) > -40000:
+                                if v1.cross_product(v2) > -30000:
                                     pyautogui.keyUp("d")
-                                    time.sleep(0.1)
+                                    time.sleep(0.09)
+                                    pyautogui.keyDown("d")
+                                elif v1.cross_product(v2) > -40000:
+                                    pyautogui.keyUp("d")
+                                    time.sleep(0.07)
+                                    pyautogui.keyDown("d")
+                                elif v1.cross_product(v2) > -50000:
+                                    pyautogui.keyUp("d")
+                                    time.sleep(0.05)
                                     pyautogui.keyDown("d")
                                 elif v1.cross_product(v2) > -60000:
-                                    pyautogui.keyUp("d")
-                                    time.sleep(0.08)
-                                    pyautogui.keyDown("d")
-                                elif v1.cross_product(v2) > -80000:
-                                    pyautogui.keyUp("d")
-                                    time.sleep(0.06)
-                                    pyautogui.keyDown("d")
-                                elif v1.cross_product(v2) > -125000:
                                     pyautogui.keyUp("d")
                                     time.sleep(0.04)
                                     pyautogui.keyDown("d")
@@ -162,10 +164,11 @@ while (cap.isOpened()):
                             dir = "none"
                             pyautogui.keyUp("a")
                             pyautogui.keyUp("d")
-
-                cv2.imshow("a", img_orig)
+                        break
+                # cv2.imshow("a", img_orig)
         except:
-                cv2.imshow("a", img_orig)
+            pass
+                # cv2.imshow("a", img_orig)
 
 
         if cv2.waitKey(25) & 0xFF == ord('q'):

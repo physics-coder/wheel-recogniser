@@ -1,6 +1,5 @@
 import math
 import time
-
 import cv2
 import numpy as np
 import pyautogui
@@ -10,6 +9,7 @@ from graphics import Graphics
 
 graphics = Graphics()
 pyautogui.PAUSE = 0
+pyautogui.FAILSAFE = False
 values = [[9, 7, 6, 4, 1], [7, 6, 4, 3, 1], [5, 4, 3, 2, 0]]
 
 
@@ -27,6 +27,15 @@ direction = "None"
 
 # main loop
 while cap.isOpened():
+    if not graphics.running():
+        break
+    if graphics.get_mode():
+        if graphics.get_start():
+            pyautogui.keyDown("w")
+        else:
+            pyautogui.keyUp("w")
+    else:
+        pyautogui.keyUp("w")
     # updating the tkinter window and text
     graphics.update(detected, upright)
     ret, img_orig = cap.read()

@@ -24,59 +24,67 @@ cap.set(3, 640)
 cap.set(4, 480)
 
 direction = "None"
+
+# main loop
 while cap.isOpened():
+    # updating the tkinter window and text
     graphics.update(detected, upright)
     ret, img_orig = cap.read()
     upright = False
     detected = False
+    # checking if the camera is working
     if ret:
+        # preparing image for finding contours and circles
         image_hsv = cv2.cvtColor(img_orig, cv2.COLOR_BGR2HSV)
         lower1 = np.array([130 * 179 / 360, 60 * 255 / 100, 25 * 255 / 100])
         upper1 = np.array([240 * 179 / 360, 117 * 255 / 100, 100 * 255 / 100])
         mask_tick = cv2.inRange(image_hsv, lower1, upper1)
         full_mask = mask_tick
         tick_img = cv2.bitwise_and(img_orig, img_orig, mask=full_mask)
-        # cv2.imshow("mask", tick_img)
         tick_img = cv2.cvtColor(tick_img, cv2.COLOR_BGR2GRAY)
-        ret, th = cv2.threshold(tick_img, 50, 255, cv2.THRESH_BINARY)
-        # cv2.imshow("thresh", th)
-        contours, hierarchy = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         img = cv2.cvtColor(img_orig, cv2.COLOR_BGR2GRAY)
+        ret, th = cv2.threshold(tick_img, 50, 255, cv2.THRESH_BINARY)
+        # finding contours
+        contours, hierarchy = cv2.findContours(th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # finding circles
         circles = cv2.HoughCircles(img, cv2.HOUGH_GRADIENT, 1, 2000, param1=100, param2=20, minRadius=50, maxRadius=150)
-        if type(circles) != "NoneType" and contours:
+        if not isinstance(circles, type(None)) and contours:
             circles = np.uint16(np.around(circles))
-            # print(circles[0][0][2])
+            if circles[0][0][0] < 640 or circles[0][0][1] < 480 or image_hsv[circles[0][0][0]][circles[0][0][1]][2] < 150:
+                flag = False
             for n, cnt in enumerate(contours):
                 epsilon = 100 / 1000 * cv2.arcLength(cnt, True)
                 poly = cv2.approxPolyDP(cnt, epsilon, True)
                 flag = True
+                # checking if contour is a rectangle and lies within circle
                 if len(poly) > 4:
                     flag = False
                 for i in range(0, len(poly)):
                     for j in range(0, len(poly[i])):
                         if dist(circles[0][0][0], circles[0][0][1], poly[i][j][0], poly[i][j][1]) > circles[0][0][2]:
                             flag = False
-                if flag:
+                if flag and cv2.contourArea(cnt) > 0:
                     detected = True
+                    # drawing contours
                     cv2.drawContours(img_orig, [poly], -1, (128, 255, 128), 5)
-                else:
-                    detected = False
-                    upright = False
-                if flag:
+                    # drawing circle
                     for i in circles[0, :]:
                         cv2.circle(img_orig, (i[0], i[1]), i[2], (0, 255, 0), 6)
-                        cv2.circle(img_orig, (i[0], i[1]), 2, (0, 0, 255))
                     v1 = Vector(circles[0][0][0], circles[0][0][1], circles[0][0][0], -3)
+                    # finding centre of contour
                     M = cv2.moments(cnt)
                     x = int(M["m10"] / M["m00"])
                     y = int(M["m01"] / M["m00"])
                     cv2.circle(img_orig, (x, y), 7, (255, 255, 255), -1)
                     v2 = Vector(circles[0][0][0], circles[0][0][1], x, y)
+                    # finding the sinus of the angle
                     val = v1.cross_product(v2) / abs(v1) / abs(v2)
+                    # checking if wheel is upright
                     if -0.2 < val < 0.2:
                         upright = True
-                    # print(val)
+                    # checking if the recognition has started
                     if graphics.get_start():
+                        # moving the car left
                         if val > 0.2:
                             if direction == "a":
                                 if val < 0.3:
@@ -103,7 +111,7 @@ while cap.isOpened():
                                 pyautogui.keyUp("d")
                                 pyautogui.keyDown("a")
                             direction = "a"
-
+                        # moving the car right
                         elif v1.cross_product(v2) < -0.2:
                             if direction == "d":
                                 if val > -0.3:
@@ -135,12 +143,10 @@ while cap.isOpened():
                             pyautogui.keyUp("a")
                             pyautogui.keyUp("d")
                         break
+        # updating image
         graphics.upd_img(img_orig)
 
-        if cv2.waitKey(25) & 0xFF == ord('q'):
-            break
-
     else:
-        break
+        print("No camera input")
 
 cap.release()

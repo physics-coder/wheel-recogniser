@@ -24,3 +24,5 @@ angle, which meant I could hold the wheel at any distance now. I also created a 
 to start. Finally, I did some optimizations, such as removing the "try-except" statement, removed unnessecary code lines, added comments. </p>
 <p> This is how my final interface looks like! </p>
 <img width="901" alt="Screenshot 2022-12-17 at 10 45 59" src="https://user-images.githubusercontent.com/81472865/208231618-2472a5a5-d1ee-43ad-8e87-95f1b0126121.png">
+<h2> Day 6: 17 December </h2>
+<p> I added the option of automatic driving and created a full-fledged macos app, so the user does not need to download python or any libraries! </p>

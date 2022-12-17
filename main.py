@@ -17,6 +17,7 @@ def dist(a, b, c, d):
     return math.sqrt((a - c) ** 2 + (b - d) ** 2)
 
 
+
 detected = False
 upright = False
 cap = cv2.VideoCapture(0)
@@ -27,6 +28,8 @@ direction = "None"
 
 # main loop
 while cap.isOpened():
+    if not graphics.running:
+        break
     # updating the tkinter window and text
     graphics.update(detected, upright)
     ret, img_orig = cap.read()
@@ -148,5 +151,6 @@ while cap.isOpened():
 
     else:
         print("No camera input")
+
 
 cap.release()

@@ -1,6 +1,6 @@
 import time
 from tkinter import *
-
+import sys
 import cv2
 from PIL import Image, ImageTk
 
@@ -49,7 +49,10 @@ class Graphics:
         self.button_1.grid(row=1, column=0)
         self.button_2.grid(row=1, column=1)
         self.button_3.grid(row=1, column=2)
-
+        self.win.protocol("WM_DELETE_WINDOW", self.close_window)
+        self.running = True
+    def close_window(self):
+        self.running = False
     def high(self):
         self.selected_sensitivity = 2
         self.then()
